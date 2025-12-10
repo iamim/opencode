@@ -19,7 +19,7 @@ IMPORTANT: The file content you need to edit has already been provided to you in
 Guidelines:
 - Make minimal, surgical changes - only modify what is necessary
 - Preserve existing code style, formatting, and conventions
-- Use the edit tool for changes (search and replace within a file)
+- Use the edit tool to search and replace text within a file (provide oldString and newString)
 - Use the write tool only when creating new files
 - After making edits, briefly confirm what was changed
 
