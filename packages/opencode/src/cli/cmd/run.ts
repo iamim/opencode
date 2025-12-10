@@ -10,6 +10,7 @@ import { select } from "@clack/prompts"
 import { createOpencodeClient, type OpencodeClient } from "@opencode-ai/sdk/v2"
 import { Server } from "../../server/server"
 import { Provider } from "../../provider/provider"
+import { buildInlinePrompt, type InlinePromptResult } from "../inline"
 
 const TOOL: Record<string, [string, string]> = {
   todowrite: ["Todo", UI.Style.TEXT_WARNING_BOLD],
@@ -86,12 +87,32 @@ export const RunCommand = cmd({
         type: "number",
         describe: "port for the local server (defaults to random port if no value provided)",
       })
+      .option("inline-file", {
+        type: "string",
+        describe: "run an inline edit using the given file",
+      })
+      .option("inline-start", {
+        type: "number",
+        describe: "start line (1-based) of the selection or cursor for inline edit",
+      })
+      .option("inline-end", {
+        type: "number",
+        describe: "end line (1-based, inclusive) for inline edit",
+      })
+      .option("inline-context", {
+        type: "number",
+        describe: "number of context lines to include around the selection (default 20)",
+      })
+      .option("inline-smart", {
+        type: "boolean",
+        describe: "enable smart mode for inline edit (allows multi-turn and tools)",
+      })
   },
   handler: async (args) => {
     let message = [...args.message, ...(args["--"] || [])].join(" ")
 
     const fileParts: any[] = []
-    if (args.file) {
+    if (!args.inlineFile && args.file) {
       const files = Array.isArray(args.file) ? args.file : [args.file]
 
       for (const filePath of files) {
@@ -121,8 +142,13 @@ export const RunCommand = cmd({
 
     if (!process.stdin.isTTY) message += "\n" + (await Bun.stdin.text())
 
-    if (message.trim().length === 0 && !args.command) {
+    if (message.trim().length === 0 && !args.command && !args.inlineFile) {
       UI.error("You must provide a message or a command")
+      process.exit(1)
+    }
+
+    if (args.inlineFile && args.command) {
+      UI.error("Inline edit mode does not support running commands")
       process.exit(1)
     }
 
@@ -231,11 +257,42 @@ export const RunCommand = cmd({
         })
       } else {
         const modelParam = args.model ? Provider.parseModel(args.model) : undefined
+        let inlineParts: any[] | undefined
+        let inlineTools: Record<string, boolean> | undefined
+        let agent = args.agent || "build"
+
+        if (args.inlineFile) {
+          if (args.inlineStart === undefined) {
+            UI.error("Inline edit requires --inline-start (1-based line number)")
+            process.exit(1)
+          }
+          let inline: InlinePromptResult
+          try {
+            inline = await buildInlinePrompt({
+              filePath: args.inlineFile,
+              startLine: args.inlineStart,
+              endLine: args.inlineEnd,
+              contextLines: args.inlineContext,
+              prompt: message.trim(),
+              smart: args.inlineSmart,
+              cwd: process.cwd(),
+            })
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err)
+            UI.error(msg)
+            process.exit(1)
+          }
+          inlineParts = inline.parts
+          inlineTools = inline.tools
+          agent = inline.agent
+        }
+
         await sdk.session.prompt({
           sessionID,
-          agent: args.agent || "build",
+          agent,
           model: modelParam,
-          parts: [...fileParts, { type: "text", text: message }],
+          parts: inlineParts ?? [...fileParts, { type: "text", text: message }],
+          tools: inlineTools,
         })
       }
 
