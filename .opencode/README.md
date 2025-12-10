@@ -64,10 +64,19 @@ Add documentation to code at specific lines.
 
 ## How It Works
 
-1. **Pre-reading**: When you use `@filepath` syntax in commands, the file content is pre-read and injected into the prompt
-2. **Line Range**: Using `?start=X&end=Y` query params on file references limits the read to specific lines
-3. **Single-turn**: The `inline-edit` agent has `maxSteps: 1` to force completion in one turn
-4. **Tool Restriction**: The `inline-edit` agent disables read, grep, glob, etc. since the file is pre-read
+The pre-reading mechanism is built into opencode's command system:
+
+1. **File Reference**: Commands use `@filepath?start=X&end=Y` syntax to reference files
+2. **Automatic ReadTool Execution**: When `SessionPrompt.prompt()` processes file parts, it executes `ReadTool` internally (see `createUserMessage()` in `prompt.ts` lines 941-978)
+3. **FileTime Registration**: `ReadTool.execute()` calls `FileTime.read(sessionID, filepath)` which registers that the file was read
+4. **Edit Tool Works**: When the agent calls the edit tool, `FileTime.assert()` succeeds because the read was already registered for that session
+
+This means:
+- The file is actually read via the ReadTool (not just content injection)
+- The `FileTime` tracking that edit requires is properly satisfied
+- No extra turn is wasted because the read happens during prompt creation, not agent execution
+
+**Key insight**: The `inline-edit` agent disables the read tool because it's not needed - the file is already read before the agent runs. The edit tool still works because `FileTime.read()` was called during the pre-read.
 
 ## IDE Integration
 
