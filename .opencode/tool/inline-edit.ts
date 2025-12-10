@@ -121,7 +121,8 @@ Use for quick edits (add docs, fix bugs) or complex refactorings (with smart mod
     let focusEnd: number | undefined
 
     if (line !== undefined) {
-      focusStart = focusEnd = line
+      focusStart = line
+      focusEnd = line
     } else if (startLine !== undefined && endLine !== undefined) {
       focusStart = startLine
       focusEnd = endLine
@@ -137,6 +138,24 @@ Use for quick edits (add docs, fix bugs) or complex refactorings (with smart mod
     const lineRange = focusStart ? `lines ${focusStart}-${focusEnd}` : "entire file"
     const contextRange = `lines ${displayStart}-${displayEnd}`
 
+    // Determine file language for syntax highlighting
+    const ext = path.extname(filePath).slice(1)
+    const languageMap: Record<string, string> = {
+      ts: "typescript",
+      tsx: "typescript",
+      js: "javascript",
+      jsx: "javascript",
+      py: "python",
+      rb: "ruby",
+      go: "go",
+      rs: "rust",
+      java: "java",
+      c: "c",
+      cpp: "cpp",
+      cs: "csharp",
+    }
+    const language = languageMap[ext] || ext || ""
+
     return `=== Inline Edit Context Prepared ===
 
 File: ${relativePath}
@@ -145,7 +164,7 @@ Context: ${contextRange} (${CONTEXT_LINES} lines before/after)
 Mode: ${smart ? "SMART (multi-turn, full tools)" : "QUICK (single-turn, edit-only)"}
 
 --- File Content ---
-\`\`\`
+${language ? `\`\`\`${language}` : "```"}
 ${content}
 \`\`\`
 
