@@ -8,10 +8,10 @@ Perform an inline edit on the specified file.
 
 **Target File:** @$1
 
-**Edit Location:**
-- Line(s): $2
+**Edit Location (line number):**
+$2
 
-**Edit Instructions:**
+**Edit Instructions (all remaining arguments):**
 $ARGUMENTS
 
-Make the requested changes using the edit tool. The file content has been pre-read for you above.
+Make the requested changes using the edit tool. The file content is provided above.

@@ -97,9 +97,14 @@ vim.keymap.set('v', '<leader>ie', function()
   local file = vim.fn.expand('%:p')
   local prompt = vim.fn.input('Edit instruction: ')
   
-  vim.cmd(string.format(
-    '!opencode run --command iedit -- %s %d %d "%s"',
-    file, start_line, end_line, prompt
-  ))
+  -- Use vim.system for safer command execution (Neovim 0.10+)
+  vim.system({
+    'opencode', 'run', '--command', 'iedit', '--',
+    file, tostring(start_line), tostring(end_line), prompt
+  }, { text = true }, function(result)
+    if result.code ~= 0 then
+      vim.notify('Edit failed: ' .. (result.stderr or ''), vim.log.levels.ERROR)
+    end
+  end)
 end, { desc = 'Inline edit selection' })
 ```

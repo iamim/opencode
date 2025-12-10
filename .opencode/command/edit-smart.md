@@ -8,10 +8,10 @@ Perform a smart inline edit on the specified file with full codebase navigation.
 
 **Target File:** @$1
 
-**Edit Location:**
-- Line(s): $2
+**Edit Location (line number):**
+$2
 
-**Edit Instructions:**
+**Edit Instructions (all remaining arguments):**
 $ARGUMENTS
 
-The initial file content has been pre-read for you above. You may explore additional files if needed to complete this edit correctly.
+The initial file content is provided above. You may explore additional files if needed to complete this edit correctly.
