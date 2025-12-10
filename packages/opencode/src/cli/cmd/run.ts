@@ -10,7 +10,7 @@ import { select } from "@clack/prompts"
 import { createOpencodeClient, type OpencodeClient } from "@opencode-ai/sdk/v2"
 import { Server } from "../../server/server"
 import { Provider } from "../../provider/provider"
-import { buildInlinePrompt } from "../inline"
+import { buildInlinePrompt, type InlinePromptResult } from "../inline"
 
 const TOOL: Record<string, [string, string]> = {
   todowrite: ["Todo", UI.Style.TEXT_WARNING_BOLD],
@@ -262,19 +262,22 @@ export const RunCommand = cmd({
         let agent = args.agent || "build"
 
         if (args.inlineFile) {
-          if (!args.inlineStart || args.inlineStart < 1) {
-            UI.error("Inline edit requires --inline-start (1-based line number)")
+          let inline!: InlinePromptResult
+          try {
+            inline = await buildInlinePrompt({
+              filePath: args.inlineFile,
+              startLine: args.inlineStart,
+              endLine: args.inlineEnd,
+              contextLines: args.inlineContext,
+              prompt: message.trim(),
+              smart: args.inlineSmart,
+              cwd: process.cwd(),
+            })
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err)
+            UI.error(msg)
             process.exit(1)
           }
-          const inline = await buildInlinePrompt({
-            filePath: args.inlineFile,
-            startLine: args.inlineStart,
-            endLine: args.inlineEnd,
-            contextLines: args.inlineContext,
-            prompt: message.trim(),
-            smart: args.inlineSmart,
-            cwd: process.cwd(),
-          })
           inlineParts = inline.parts
           inlineTools = inline.tools
           agent = inline.agent
