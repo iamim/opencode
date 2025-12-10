@@ -23,4 +23,39 @@
       },
     },
   },
+  "agent": {
+    "inline-edit": {
+      "mode": "subagent",
+      "maxSteps": 1,
+      "tools": {
+        "read": false,
+        "write": false,
+        "bash": false,
+        "glob": false,
+        "grep": false,
+        "ls": false,
+        "webfetch": false,
+        "websearch": false,
+        "codesearch": false,
+        "task": false,
+        "todoread": false,
+        "todowrite": false,
+        "edit": true
+      }
+    },
+    "inline-edit-smart": {
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "write": true,
+        "bash": true,
+        "glob": true,
+        "grep": true,
+        "ls": true,
+        "webfetch": true,
+        "edit": true,
+        "task": true
+      }
+    }
+  }
 }
