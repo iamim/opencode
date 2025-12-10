@@ -266,7 +266,7 @@ export const RunCommand = cmd({
             UI.error("Inline edit requires --inline-start (1-based line number)")
             process.exit(1)
           }
-          let inline: InlinePromptResult | null = null
+          let inline: InlinePromptResult
           try {
             inline = await buildInlinePrompt({
               filePath: args.inlineFile,
@@ -280,10 +280,6 @@ export const RunCommand = cmd({
           } catch (err) {
             const msg = err instanceof Error ? err.message : String(err)
             UI.error(msg)
-            process.exit(1)
-          }
-          if (!inline) {
-            UI.error("Inline prompt failed")
             process.exit(1)
           }
           inlineParts = inline.parts

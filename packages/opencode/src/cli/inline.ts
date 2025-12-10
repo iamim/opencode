@@ -70,13 +70,14 @@ export async function buildInlinePrompt(input: InlinePromptInput): Promise<Inlin
   const contextEnd = Math.min(totalLines, endLine + contextLines)
 
   const selection = lines.slice(startLine - 1, endLine).join("\n")
+  const trimmedSelection = selection.trim()
   const relativePath = path.relative(cwd, absPath) || absPath
 
   const body = [
     `File: ${relativePath}`,
     `Selection lines: ${startLine}-${endLine}`,
     `Instruction: ${prompt}`,
-    selection.trim()
+    trimmedSelection
       ? `Selected code:\n\`\`\`\n${selection}\n\`\`\``
       : "Selection is empty; insert changes at the cursor line shown above.",
     `Context lines ${contextStart}-${contextEnd} are attached below. Use the edit tool to update only the selection.`,
