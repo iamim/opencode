@@ -262,6 +262,10 @@ export const RunCommand = cmd({
         let agent = args.agent || "build"
 
         if (args.inlineFile) {
+          if (args.inlineStart == null) {
+            UI.error("Inline edit requires --inline-start (1-based line number)")
+            process.exit(1)
+          }
           let inline!: InlinePromptResult
           try {
             inline = await buildInlinePrompt({

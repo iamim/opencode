@@ -186,9 +186,9 @@ export namespace Agent {
         description: "Single-turn inline editor that uses only the provided context and edit tool.",
         prompt: INLINE_PROMPT,
         tools: {
+          ...defaultTools,
           "*": false,
           edit: true,
-          ...defaultTools,
         },
         options: {},
         permission: agentPermission,
