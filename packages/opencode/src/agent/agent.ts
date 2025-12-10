@@ -7,6 +7,20 @@ import { SystemPrompt } from "../session/system"
 import { Instance } from "../project/instance"
 import { mergeDeep } from "remeda"
 
+const INLINE_PROMPT = [
+  "You are an inline code editor. A user has selected a specific section of a file and provided a short instruction.",
+  "Use ONLY the supplied context to craft your change and keep edits scoped to the selection.",
+  "Generate a single edit tool call that replaces the selected code (`oldString`) with the updated code (`newString`).",
+  "Do not call tools to gather more context—the required snippet is already attached. Avoid reformatting unrelated code.",
+  "If the selection is empty, insert the requested change at the provided cursor line.",
+].join("\n")
+
+const INLINE_SMART_PROMPT = [
+  "You are a smart inline editor. Start by using the provided selection and context to make the requested change.",
+  "Prefer a precise edit tool call that targets the selection. You may take additional steps or use tools if the request truly requires it.",
+  "Keep changes localized and avoid unrelated rewrites.",
+].join("\n")
+
 export namespace Agent {
   export const Info = z
     .object({
@@ -164,6 +178,33 @@ export namespace Agent {
         tools: {
           ...defaultTools,
         },
+        mode: "primary",
+        builtIn: true,
+      },
+      inline: {
+        name: "inline",
+        description: "Single-turn inline editor that uses only the provided context and edit tool.",
+        prompt: INLINE_PROMPT,
+        tools: {
+          "*": false,
+          edit: true,
+          ...defaultTools,
+        },
+        options: {},
+        permission: agentPermission,
+        mode: "primary",
+        builtIn: true,
+        maxSteps: 1,
+      },
+      "inline-smart": {
+        name: "inline-smart",
+        description: "Inline editor with smart mode. Starts from provided context and can take extra steps and tools.",
+        prompt: INLINE_SMART_PROMPT,
+        tools: {
+          ...defaultTools,
+        },
+        options: {},
+        permission: agentPermission,
         mode: "primary",
         builtIn: true,
       },
